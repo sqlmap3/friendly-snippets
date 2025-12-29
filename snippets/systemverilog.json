@@ -7,7 +7,7 @@
       "// Project : ${2:Project Name}",
       "// Module  : ${3:$TM_FILENAME_BASE}",
       "// Author  : ${4:$user}",
-      "        // Created : ${5:$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE $CURRENT_HOUR:$CURRENT_MINUTE:$CURRENT_SECOND}",
+      "// Created : ${5:$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE $CURRENT_HOUR:$CURRENT_MINUTE:$CURRENT_SECOND}",
       "// Modified: ${6:$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE $CURRENT_HOUR:$CURRENT_MINUTE:$CURRENT_SECOND}",
       "// ===========================================================================",
       "// Description:",
