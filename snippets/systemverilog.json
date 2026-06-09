@@ -7121,5 +7121,91 @@
       "endclass : $1"
     ],
     "description": "uvm_coverage_safe \"Coverage Collector with Reset Guard\""
+  },
+  "constraint_axi_4kb \"AXI 4KB Boundary Constraint (Sign-off)\"": {
+    "prefix": "constraint_axi_4kb",
+    "body": [
+      "// Sign-off Standard: Prevent AXI bursts from crossing a 4KB boundary",
+      "constraint ${1:axi_4kb_boundary}_c {",
+      "\t// Condition: (Start_Address % 4096) + (Total_Bytes_in_Burst) <= 4096",
+      "\t(${2:addr} & 12'hFFF) + ((${3:awlen} + 1) * (1 << ${4:awsize})) <= 13'h1000;",
+      "}"
+    ],
+    "description": "constraint_axi_4kb \"AXI 4KB Boundary Constraint (Sign-off)\""
+  },
+  "uvm_agent_array_build \"Build Array of Agents (SoC Multi-channel)\"": {
+    "prefix": "uvm_agent_array_build",
+    "body": [
+      "// Sign-off Standard: Dynamically build and configure an array of identical agents (e.g., PCIe lanes, DDR channels)",
+      "foreach (${1:m_agents}[i]) begin",
+      "\tstring inst_name = \\$sformatf(\"${2:agent}_%0d\", i);",
+      "\t${3:agent_config_type} cfg;",
+      "\t",
+      "\t// Look for individual config object for each channel",
+      "\tif (!uvm_config_db#($3)::get(this, \"\", \\$sformatf(\"${4:cfg}_%0d\", i), cfg)) begin",
+      "\t\t`uvm_fatal(\"CFG_ERR\", \\$sformatf(\"Missing config object for %s\", inst_name))",
+      "\tend",
+      "\t",
+      "\tuvm_config_db#($3)::set(this, inst_name, \"cfg\", cfg);",
+      "\t$1[i] = ${5:agent_type}::type_id::create(inst_name, this);",
+      "end"
+    ],
+    "description": "uvm_agent_array_build \"Build Array of Agents (SoC Multi-channel)\""
+  },
+  "sva_gray_code \"SVA Gray Code Checker (CDC Async FIFO)\"": {
+    "prefix": "sva_gray_code",
+    "body": [
+      "// Sign-off Standard: Validate Gray code transitions for Async FIFOs / CDC interfaces",
+      "// Ensures that at most ONE bit changes per clock cycle.",
+      "property ${1:gray_code_p};",
+      "\t@(posedge ${2:clk}) disable iff (!${3:rst_n})",
+      "\t\\$changed(${4:gray_bus}) |-> \\$onehot($4 ^ \\$past($4));",
+      "endproperty : $1",
+      "",
+      "assert_$1: assert property ($1) else `uvm_error(\"CDC_ERR\", \"Multiple bits changed in Gray bus concurrently!\");"
+    ],
+    "description": "sva_gray_code \"SVA Gray Code Checker (CDC Async FIFO)\""
+  },
+  "uvm_reg_cbs_auto_clear \"RAL Callback: Clear on Read (COR)\"": {
+    "prefix": "uvm_reg_cbs_auto_clear",
+    "body": [
+      "// Sign-off Standard: Model Hardware Clear-on-Read (COR) behavior perfectly in RAL",
+      "class ${1:cor_cb} extends uvm_reg_cbs;",
+      "\t`uvm_object_utils($1)",
+      "\t",
+      "\tfunction new(string name = \"$1\");",
+      "\t\tsuper.new(name);",
+      "\tendfunction",
+      "\t",
+      "\tvirtual task post_read(uvm_reg_item rw);",
+      "\t\tuvm_reg_data_t clear_val = ${2:'0};",
+      "\t\tif (rw.status == UVM_IS_OK) begin",
+      "\t\t\t// Force the mirror to clear value WITHOUT triggering a real bus write transaction",
+      "\t\t\tvoid'(rw.element.predict(clear_val, -1, UVM_PREDICT_DIRECT, UVM_FRONTDOOR, rw.map, rw.path));",
+      "\t\t\t`uvm_info(\"RAL_COR\", \\$sformatf(\"Auto-cleared register %s internally after successful read\", rw.element.get_full_name()), UVM_HIGH)",
+      "\t\tend",
+      "\tendtask",
+      "endclass : $1"
+    ],
+    "description": "uvm_reg_cbs_auto_clear \"RAL Callback: Clear on Read (COR)\""
+  },
+  "covergroup_ref \"Reusable Covergroup with Ref Arguments\"": {
+    "prefix": "covergroup_ref",
+    "body": [
+      "// Sign-off Standard: Highly reusable covergroup passing variables by reference",
+      "// Allows instantiating this ONE covergroup across multiple different physical interfaces",
+      "covergroup ${1:cg_generic} (ref logic [${2:31}:0] ${3:data}, ref logic ${4:valid}) @(posedge ${5:clk});",
+      "\toption.per_instance = 1;",
+      "\t",
+      "\t${6:cp_data}: coverpoint $3 iff ($4) {",
+      "\t\tbins ${7:zero}     = {0};",
+      "\t\tbins ${8:all_ones} = {${2+1}'hFFFF_FFFF};",
+      "\t\tbins ${9:others}   = default;",
+      "\t}",
+      "endgroup : $1",
+      "",
+      "// Usage: cg_inst = new(vif.my_data, vif.my_valid);"
+    ],
+    "description": "covergroup_ref \"Reusable Covergroup with Ref Arguments\""
   }
 }
